@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 /**
@@ -56,6 +58,9 @@ public class OAuth2ServerConfig {
         AuthenticationManager authenticationManager;
         @Autowired
         RedisConnectionFactory redisConnectionFactory;
+        
+//        @Autowired
+//    	private TokenStore tokenStore;
 
 
         @Override
@@ -72,12 +77,14 @@ public class OAuth2ServerConfig {
                     .resourceIds(DEMO_RESOURCE_ID)
                     .authorizedGrantTypes("client_credentials", "refresh_token")
                     .scopes("select")
+                    .accessTokenValiditySeconds(360) // enforce the access token time limited
                     .authorities("oauth2")
                     .secret(finalSecret)
                     .and().withClient("client_2")
                     .resourceIds(DEMO_RESOURCE_ID)
                     .authorizedGrantTypes("password", "refresh_token")
                     .scopes("select")
+                    .accessTokenValiditySeconds(360)
                     .authorities("oauth2")
                     .secret(finalSecret);
         }
@@ -85,9 +92,10 @@ public class OAuth2ServerConfig {
         @Override
         public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
             endpoints
-                    .tokenStore(new RedisTokenStore(redisConnectionFactory))
-                    .authenticationManager(authenticationManager)
-                    .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST);
+                    //.tokenStore(new RedisTokenStore(redisConnectionFactory))
+            	.tokenStore(new InMemoryTokenStore()) // change to use in memory token store
+            	.authenticationManager(authenticationManager)
+            	.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST);
         }
 
         @Override
